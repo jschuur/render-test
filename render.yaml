@@ -1,0 +1,49 @@
+services:
+  - type: web
+    name: api
+    plan: free
+    runtime: node
+    branch: main
+    # scaling:
+    #   minInstances: 1
+    #   maxInstances: 1
+    #   targetMemoryPercent: 60 # optional if targetCPUPercent is set
+    #   targetCPUPercent: 60 # optional if targetMemory is set
+    buildCommand: pnpm install && pnpm build && pnpm db:migrate
+    startCommand: pnpm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rendertest
+          property: connectionString
+
+  - type: cron
+    name: addData
+    plan: starter
+    runtime: node
+    schedule: '0 */15 * * * *'
+    buildCommand: pnpm install && pnpm build && pnpm db:migrate
+    startCommand: pnpm cron
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rendertest
+          property: connectionString
+
+databases:
+  - name: rendertest
+    plan: free
+    databaseName: rendertest
+    user: rendertest
+
+envVarGroups:
+  - name: shared
+    envVars:
+      - key: NODE_VERSION
+        value: 18
